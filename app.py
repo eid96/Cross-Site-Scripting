@@ -1,10 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
+from sqlite3 import Error
 
 app = Flask(__name__)
 
 # A simple dictionary that stores username and password
 users = {'john': 'doe'}
 
+def create_db():
+    con = sqlite3.connect("Stock.db")
+    curs = con.cursor()
+    # Create a table
+    curs.execute('''CREATE TABLE IF NOT EXISTS stocks
+                   (date text, Brand text, Product text, quantity real, price real)''')
+
+    # Insert data into the table
+    curs.execute("INSERT INTO stocks VALUES ('2006-01-05','Brand 1','Product 1',100, 35.14)")
+
+     # Save (commit) the changes
+    con.commit()
 
 # Home route
 @app.route('/')
@@ -37,7 +51,9 @@ def signup():
 
 # Dashboard route
 @app.route('/dashboard')
+
 def dashboard():
+    create_db()
     return render_template('dashboard.html')
 
 
