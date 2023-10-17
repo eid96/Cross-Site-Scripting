@@ -55,7 +55,9 @@ def signup():
 def dashboard():
     create_db()
     return render_template('dashboard.html')
-
+@app.route('/Store')
+def Store():
+    return render_template('Store.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
