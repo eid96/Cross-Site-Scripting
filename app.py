@@ -7,9 +7,11 @@ app = Flask(__name__)
 # A simple dictionary that stores username and password
 users = {'john': 'doe'}
 
+
 def create_db():
     con = sqlite3.connect("Stock.db")
     curs = con.cursor()
+    curs.execute("DELETE FROM stocks")
     # Create a table
     curs.execute('''CREATE TABLE IF NOT EXISTS stocks
                    (Brand text, Product text, quantity real, price real)''')
@@ -31,15 +33,17 @@ def create_db():
     # Save (commit) the changes
     con.commit()
     con.close()
+
+
 # Home route
-#@app.route('/Shop')
-#def create_shop_html():
+# @app.route('/Shop')
+# def create_shop_html():
 
 
-
-@app.route('/')
+@app.route('/home')
 def home():
-   # create_shop_html()
+    # create_shop_html()
+    create_db()
     return render_template('home.html')
 
 
@@ -49,8 +53,8 @@ def signin():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        #userInput = "<script>alert('xss attack!!') </script>"
-        #document.getElementById('username').value = userInput;
+        # userInput = "<script>alert('xss attack!!') </script>"
+        # document.getElementById('username').value = userInput;
         if username in users and users[username] == password:
             return redirect(url_for('dashboard'))
         else:
@@ -70,13 +74,14 @@ def signup():
 
 # Dashboard route
 @app.route('/dashboard')
-
 def dashboard():
-    create_db()
     return render_template('dashboard.html')
-@app.route('/Store')
+
+
+@app.route('/Store', methods=['GET', 'POST'])
 def Store():
     return render_template('Store.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
