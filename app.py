@@ -40,7 +40,7 @@ def create_db():
 # def create_shop_html():
 
 
-@app.route('/home')
+@app.route('/')
 def home():
     # create_shop_html()
     create_db()
@@ -78,10 +78,36 @@ def dashboard():
     return render_template('dashboard.html')
 
 
-@app.route('/Store', methods=['GET', 'POST'])
+@app.route('/Store', methods=['GET','POST'])
 def Store():
     return render_template('Store.html')
+@app.route('/insert', methods=['POST'])
+def insert():
+    Brand = request.form['Brand']
+    Product = request.form['Product']
+    quantity = request.form['quantity']
+    price = request.form['price']
 
+    con = sqlite3.connect("Stock.db")
+    curs = con.cursor()
+    curs.execute("INSERT INTO stocks (Brand, Product, quantity, price) VALUES (?, ?, ?, ?)",
+                 (Brand, Product, quantity, price))
+    print("Added to table")
+    con.commit()
+    con.close()
+
+    return render_template('Store.html')
+@app.route('/Shop')
+def Shop():
+    con = sqlite3.connect("Stock.db")
+    curs = con.cursor()
+    curs.execute("SELECT * FROM stocks")
+    data = curs.fetchall()
+    con.close()
+    return render_template('Shop.html', data=data)
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
