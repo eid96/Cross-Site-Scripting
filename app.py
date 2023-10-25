@@ -1,113 +1,90 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import sqlite3
-from sqlite3 import Error
+from datetime import datetime
 
 app = Flask(__name__)
 
-# A simple dictionary that stores username and password
-users = {'john': 'doe'}
+@app.route('/')
+def home():
+    create_db()
+    insert()
+    con = sqlite3.connect("Blog.db")
+    curs = con.cursor()
+    curs.execute("SELECT id, title FROM posts")
+    data = curs.fetchall()
+    con.close()
+    return render_template('home.html', data=data)
 
 
 def create_db():
-    con = sqlite3.connect("Stock.db")
-    curs = con.cursor()
-    curs.execute("DELETE FROM stocks")
-    # Create a table
-    curs.execute('''CREATE TABLE IF NOT EXISTS stocks
-                   (Brand text, Product text, quantity real, price real)''')
-
-    curs.execute("INSERT INTO stocks VALUES ('Brand1', 'ProductA', 100, 25.5)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand2', 'ProductB', 150, 30.2)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand3', 'ProductC', 200, 20.0)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand4', 'ProductD', 75, 15.6)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand5', 'ProductE', 120, 18.8)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand6', 'ProductF', 180, 22.1)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand7', 'ProductG', 90, 26.4)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand8', 'ProductH', 110, 27.9)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand9', 'ProductI', 130, 19.5)")
-    curs.execute("INSERT INTO stocks VALUES ('Brand10', 'ProductJ', 160, 32.0)")
-
-    # Commit the changes
-    con.commit()
-
-    # Save (commit) the changes
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS posts (
+             id INTEGER PRIMARY KEY,
+             title TEXT NOT NULL,
+             text TEXT NOT NULL,
+             date TEXT NOT NULL
+         )
+     ''')
     con.commit()
     con.close()
 
 
-# Home route
-# @app.route('/Shop')
-# def create_shop_html():
-
-
-@app.route('/')
-def home():
-    # create_shop_html()
-    create_db()
-    return render_template('home.html')
-
-
-# Sign in route
-@app.route('/signin', methods=['GET', 'POST'])
-def signin():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        # userInput = "<script>alert('xss attack!!') </script>"
-        # document.getElementById('username').value = userInput;
-        if username in users and users[username] == password:
-            return redirect(url_for('dashboard'))
-        else:
-            return render_template('signin.html', message='Invalid credentials. Please try again.')
-    return render_template('signin.html')
-
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        users[username] = password
-        return redirect(url_for('signin'))
-    return render_template('signup.html')
-
-
-# Dashboard route
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
-
-
-@app.route('/Store', methods=['GET','POST'])
-def Store():
-    return render_template('Store.html')
-@app.route('/insert', methods=['POST'])
+# function that adds test post to blog
 def insert():
-    Brand = request.form['Brand']
-    Product = request.form['Product']
-    quantity = request.form['quantity']
-    price = request.form['price']
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    cur.execute("SELECT COUNT(*) FROM posts")
+    data = cur.fetchone()[0]
+    if data == 0:
+        # Adding test posts
+        posts = [
+            ('First Post', 'This is the text for the first post.', datetime.now()),
+            ('Second Post', 'This is the text for the second post.', datetime.now()),
+            ('Third Post', 'test', datetime.now())
+        ]
 
-    con = sqlite3.connect("Stock.db")
-    curs = con.cursor()
-    curs.execute("INSERT INTO stocks (Brand, Product, quantity, price) VALUES (?, ?, ?, ?)",
-                 (Brand, Product, quantity, price))
-    print("Added to table")
-    con.commit()
+        # Inserting the posts into the table
+        for post in posts:
+            cur.execute("INSERT INTO posts (title, text, date) VALUES (?, ?, ?)", post)
+
+        con.commit()
     con.close()
 
-    return render_template('Store.html')
-@app.route('/Shop')
-def Shop():
-    con = sqlite3.connect("Stock.db")
+@app.route('/add_posts', methods=['GET','POST'])
+def add_posts():
+    return render_template('add_posts.html')
+
+
+@app.route('/Posts', methods=['GET', 'POST'])
+def all_posts():
+    title = request.args.get('title')
+    post_id = request.args.get('id')
+    con = sqlite3.connect("Blog.db")
     curs = con.cursor()
-    curs.execute("SELECT * FROM stocks")
-    data = curs.fetchall()
+    curs.execute("SELECT * FROM posts WHERE title=? AND id=?", (title, post_id))
+    data = curs.fetchone()
     con.close()
-    return render_template('Shop.html', data=data)
+    return render_template('Posts.html', data=data)
+
+@app.route('/new_posts', methods=['POST'])
+def new_posts():
+    title = request.form['title']
+    text = request.form['text']
+    date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    try:
+        cur.execute("INSERT INTO posts (title, text, date) VALUES (?, ?, ?)", (title, text, date))
+        con.commit()
+        print("Added to table")
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+    finally:
+        con.close()
+    return render_template('add_posts.html')
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    # Call the function to insert test posts
+    app.run()

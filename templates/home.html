@@ -1,14 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
 <body>
-    <h1>Welcome to the Flask Sign-In App</h1>
-    <a href="{{ url_for('signin') }}">Sign In</a>
 
-    <a href="{{ url_for('signup') }}">Sign Un</a>
+    <h1>Blog</h1>
+    <a href="{{ url_for('add_posts') }}">Add post</a>
+
+    <table border="1">
+        <tr>
+            <th>Titles</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1] }}</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+
 </body>
 </html>
