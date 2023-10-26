@@ -69,8 +69,8 @@ def all_posts():
 
 @app.route('/new_posts', methods=['POST'])
 def new_posts():
-    title = request.form['title']
-    text = request.form['text']
+    title = request.form['title'] # Vulnerability here, as it's not sanitized
+    text = request.form['text'] # Vulnerability here, as it's not sanitized
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
@@ -86,5 +86,4 @@ def new_posts():
 
 
 if __name__ == '__main__':
-    # Call the function to insert test posts
     app.run()
