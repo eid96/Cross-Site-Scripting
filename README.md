@@ -22,3 +22,9 @@ Mitigation:
 Explain the methods to prevent XSS vulnerabilities.
 Modify your application to fix the vulnerability you introduced.
 Demonstrate that your mitigation strategies are effective.
+
+### Docker: 
+run the following in git bash: 
+cd Cross-Site-Scripting
+docker build -t xss .
+docker run -d -p 5000:5000 xss
