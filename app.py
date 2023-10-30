@@ -4,8 +4,12 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def home():
+    # function that render default homescreen with titles for each post
+    # also gets id corresponding to the title, so right text is shown
+    # when title is pressed
     create_db()
     insert()
     con = sqlite3.connect("Blog.db")
@@ -44,20 +48,24 @@ def insert():
             ('Third Post', 'test', datetime.now())
         ]
 
-        # Inserting the posts into the table
+        # Inserting the posts into the table if the table is empty
         for post in posts:
             cur.execute("INSERT INTO posts (title, text, date) VALUES (?, ?, ?)", post)
 
         con.commit()
     con.close()
 
-@app.route('/add_posts', methods=['GET','POST'])
+
+@app.route('/add_posts', methods=['GET', 'POST'])
 def add_posts():
+    # render html page "add_posts"
     return render_template('add_posts.html')
 
 
 @app.route('/Posts', methods=['GET', 'POST'])
 def all_posts():
+    # Function to show entire post (title and belongning text)
+    # based on title pressed on home screen
     title = request.args.get('title')
     post_id = request.args.get('id')
     con = sqlite3.connect("Blog.db")
@@ -67,10 +75,12 @@ def all_posts():
     con.close()
     return render_template('Posts.html', data=data)
 
+
 @app.route('/new_posts', methods=['POST'])
 def new_posts():
-    title = request.form['title'] # Vulnerability here, as it's not sanitized
-    text = request.form['text'] # Vulnerability here, as it's not sanitized
+    # Function to add new blogposts
+    title = request.form['title']  # Vulnerability here, as it's not sanitized
+    text = request.form['text']  # Vulnerability here, as it's not sanitized
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
