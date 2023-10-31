@@ -28,15 +28,29 @@
             font-size: 14px;
             color: #888;
         }
+         .back-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
     </style>
 </head>
 <body>
 
     <div class="post">
-        <div class="title">{{ data[1] }}</div>
-        <div class="text">{{ data[2] }}</div>
+        <div class="title">{{ data[1] | safe }}</div>
+        <div class="text">{{ data[2] | safe}}</div>
         <div class="date">Date Written: {{ data[3] }}</div>
     </div>
+<a href="/" class="back-btn">Back to Home</a>
 
 </body>
 </html>
