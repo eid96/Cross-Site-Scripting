@@ -46,12 +46,10 @@
 <body>
 
     <div class="post">
-        <div class="title">{{ data[1] }}</div>
-        <div class="text">{{ data[2] }}</div>
+        <div class="title">{{ data[1] |safe }}</div>
+        <div class="text">{{ data[2] | safe }}</div>
         <div class="date">Date Written: {{ data[3] }}</div>
     </div>
         <a class="back-btn" href="{{ url_for('home') }}">Home</a>
-
-
 </body>
 </html>
