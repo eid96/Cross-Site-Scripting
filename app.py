@@ -14,7 +14,7 @@ def home():
     insert()
     con = sqlite3.connect("Blog.db")
     curs = con.cursor()
-    curs.execute("SELECT id, title FROM posts")
+    curs.execute("SELECT id, title FROM posts ORDER BY date DESC")
     data = curs.fetchall()
     con.close()
     return render_template('home.html', data=data)
