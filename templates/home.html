@@ -60,7 +60,7 @@
             </tr>
             {% for row in data %}
             <tr>
-                <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1] }}</a></td>
+                <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1]  |safe }}</a></td>
             </tr>
             {% endfor %}
         </table>
