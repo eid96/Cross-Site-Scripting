@@ -9,7 +9,7 @@ app = Flask(__name__)
 def home():
     # function that render default homescreen with titles for each post
     # also gets id corresponding to the title, so right text is shown
-    # when title is pressed
+    # when title is pressed and orders it by date
     create_db()
     insert()
     con = sqlite3.connect("Blog.db")
