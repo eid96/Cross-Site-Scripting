@@ -53,19 +53,17 @@
 
     <div class="container">
         <h1>Blog</h1>
-
+ <a class="back-btn" href="{{ url_for('add_posts') }}">Add post</a>
         <table class="post-list">
             <tr>
                 <th>Titles</th>
             </tr>
             {% for row in data %}
             <tr>
-                <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1] }}</a></td>
+                <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1]  |safe }}</a></td>
             </tr>
             {% endfor %}
         </table>
-
-        <a class="back-btn" href="{{ url_for('add_posts') }}">Add post</a>
     </div>
 
 </body>
