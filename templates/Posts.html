@@ -28,7 +28,7 @@
             font-size: 14px;
             color: #888;
         }
-         .back-btn {
+        .back-btn {
             width: 100%;
             padding: 10px;
             border-radius: 5px;
@@ -46,11 +46,10 @@
 <body>
 
     <div class="post">
-        <div class="title">{{ data[1] | safe }}</div>
-        <div class="text">{{ data[2] | safe}}</div>
+        <div class="title">{{ data[1] |safe }}</div>
+        <div class="text">{{ data[2] | safe }}</div>
         <div class="date">Date Written: {{ data[3] }}</div>
     </div>
-<a href="/" class="back-btn">Back to Home</a>
-
+        <a class="back-btn" href="{{ url_for('home') }}">Home</a>
 </body>
 </html>
