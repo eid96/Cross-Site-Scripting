@@ -42,6 +42,14 @@
         .login-box input[type="submit"]:hover {
             background: #45a049;
         }
+        .back-btn {
+            width: 100%;
+            padding: 8px;
+            background: #4caf50;
+            border: 0;
+            color: #fff;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -51,7 +59,9 @@
         <form action="/login" method="post">
             <input type="text" name="username" placeholder="Username" required><br>
             <input type="password" name="password" placeholder="Password" required><br>
-            <input type="submit" value="Login" href="/">
+            <input type="submit" value="Login" href="/"><br><br>
+            <a href="/" class="back-btn">Back to Home</a>
+
         </form>
     </div>
 </body>
