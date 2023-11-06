@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+import os
+
+from flask import Flask, render_template, request, session
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
+
 
 
 @app.route('/')
@@ -18,7 +21,7 @@ def home():
     curs.execute("SELECT id, title FROM posts ORDER BY date DESC")
     data = curs.fetchall()
     con.close()
-    return render_template('home.html', data=data)
+    return render_template('home.html', data=data, identity=user_login)
 
 def create_db():
     con = sqlite3.connect('Blog.db')
@@ -37,6 +40,7 @@ def create_usertable():
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
+               id INTEGER PRIMARY KEY,
                email TEXT NOT NULL,
                username TEXT NOT NULL,
                password TEXT NOT NULL
@@ -114,11 +118,35 @@ def new_posts():
         con.close()
     return render_template('add_posts.html')
 
+#log in logic
+def user_login(identity, pword):
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE username=? OR email=?", (identity, identity))
+    user = cur.fetchone()
+
+    if user and user[3] == pword:
+        print("welcome ", identity)
+        session['username_or_email'] = identity  # Set the username or email in the session
+    else:
+        print("Wrong username, email, or password")
+
+    con.close()
+    return identity
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        username_or_email = request.form['username_or_email']
+        password = request.form['password']
+        user_login(username_or_email, password)
 
     return render_template('login.html')
 
+def logout():
+    session.pop('username_or_email', None)  # Clear the username or email from the session
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
+    app.secret_key = os.urandom(12)
     app.run(host='0.0.0.0', port=5000)

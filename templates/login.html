@@ -56,10 +56,12 @@
 <body>
     <div class="login-box">
         <h2>Login</h2>
-        <form action="/login" method="post">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <input type="submit" value="Login" href="/"><br><br>
+            <form action="/login" method="post">
+            <label for="username_or_email">Username or Email:</label><br>
+            <input type="text" id="username_or_email" name="username_or_email"><br>
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password"><br><br>
+            <input type="submit" value="Submit" href="/"><br><br>
             <a href="/" class="back-btn">Back to Home</a>
 
         </form>
