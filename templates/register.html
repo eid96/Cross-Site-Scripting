@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register new user</title>
+    <style>
+        .post-form {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 50px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .input-group input,
+        .input-group textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .input-group textarea {
+            resize: none;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .back-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="post-form">
+        <form action="/register" method="post">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                 <label for="username">Username</label>
+                <input type="username" id="username" name="username" required>
+                 <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                 <label for="confirm-password">Confirm Password</label>
+                <input type="confirm-password" id="confirm-password" name="confirm-password" required>
+            </div>
+            <button type="submit" class="submit-btn">Register</button>
+        </form>
+        <a href="/" class="back-btn">Back to Home</a>
+    </div>
+
+</body>
+</html>
