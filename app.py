@@ -151,7 +151,26 @@ def logout():
     return redirect(url_for('home'))
 
 
-
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        register_user()
+    return render_template("register.html")
+def register_user():
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    confirm_password = request.form['confirm-password']
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    if password == confirm_password:
+        cur.execute("INSERT INTO users (email, username, password) VALUES (?, ?, ?)"
+                    , (email, username, password) )
+        con.commit()
+        con.close()
+        return redirect(url_for('home'))
+    else:
+        print("Password did not match")
 
 
 
