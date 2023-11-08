@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+import os
+
+from flask import Flask, render_template, request, session, url_for, redirect
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
+
 
 
 @app.route('/')
@@ -18,7 +21,8 @@ def home():
     curs.execute("SELECT id, title FROM posts ORDER BY date DESC")
     data = curs.fetchall()
     con.close()
-    return render_template('home.html', data=data)
+    user = session.get('username_or_email')
+    return render_template('home.html', data=data, user = user)
 
 def create_db():
     con = sqlite3.connect('Blog.db')
@@ -37,6 +41,7 @@ def create_usertable():
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
+               id INTEGER PRIMARY KEY,
                email TEXT NOT NULL,
                username TEXT NOT NULL,
                password TEXT NOT NULL
@@ -62,8 +67,8 @@ def insert():
             cur.execute("INSERT INTO posts (title, text, date) VALUES (?, ?, ?)", post)
 
     cur.execute("SELECT COUNT(*) FROM users")
-    data = cur.fetchone()[0]
-    if data == 0:
+    da = cur.fetchone()[0]
+    if da == 0:
         users = [
             ('User1@mail.com', 'user1', 'password1'),
             ('User2@mail.com', 'user2', 'password2'),
@@ -114,6 +119,44 @@ def new_posts():
         con.close()
     return render_template('add_posts.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login_screen():
+    print("hello from login")
+    if request.method == 'POST':
+        username_or_email = request.form['username_or_email']
+        password = request.form['password']
+        if user_login(username_or_email, password):
+            return redirect(url_for('home'))
+    return render_template('login.html')
+
+def user_login(identity, password):
+    #connect to dv
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE email=? OR username=?", (identity, identity))
+    user = cur.fetchone()
+    if user and user[3] == password:
+        print("welcome ", user[2])
+        session['username_or_email'] = identity
+        con.close()
+        return True
+    else:
+        print("wrong input")
+        return False
+@app.route('/logout')
+def logout():
+    # Clear the username or email from the session
+    session.clear()
+    print("Signed out")
+    return redirect(url_for('home'))
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
+    app.secret_key = os.urandom(12)
     app.run(host='0.0.0.0', port=5000)

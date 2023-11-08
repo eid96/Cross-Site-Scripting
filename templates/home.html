@@ -53,7 +53,12 @@
 
     <div class="container">
         <h1>Blog</h1>
- <a class="back-btn" href="{{ url_for('add_posts') }}">Add post</a>
+        {% if user %}
+            <a class="back-btn" href="/logout">Logout</a>
+        {% else %}
+            <a class="back-btn" href="{{ url_for('login_screen') }}">Login</a>
+        {% endif %}
+        <a class="back-btn" href="{{ url_for('add_posts') }}">Add post</a>
         <table class="post-list">
             <tr>
                 <th>Titles</th>
