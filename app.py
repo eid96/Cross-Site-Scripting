@@ -1,8 +1,9 @@
 import os
 import bleach
-from flask import Flask, render_template, request, session, url_for, redirect
+from flask import Flask, render_template, request, session, url_for, redirect, escape
 import sqlite3
 from datetime import datetime
+import hashlib
 
 app = Flask(__name__)
 
@@ -106,8 +107,10 @@ def all_posts():
 def new_posts():
     # Function to add new blogposts
     user = session.get('username_or_email')
-    title = request.form['title']  # Vulnerability here, as it's not sanitized
-    text = request.form['text']  # Vulnerability here, as it's not sanitized
+    #title = request.form['title']  # Vulnerability here, as it's not sanitized
+    #text = request.form['text']  # Vulnerability here, as it's not sanitized
+    title = escape(request.form['title']) #Sanitized imput from user
+    text = escape(request.form['text']) #Sanitized imput from user
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
@@ -174,6 +177,11 @@ def register_user():
     else:
         print("Password did not match")
 
+def bleaching():
+    print("function to bleach")
+
+def has_password():
+    print("Hashind")
 
 
 
