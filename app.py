@@ -105,6 +105,7 @@ def all_posts():
 @app.route('/new_posts', methods=['POST'])
 def new_posts():
     # Function to add new blogposts
+    user = session.get('username_or_email')
     title = request.form['title']  # Vulnerability here, as it's not sanitized
     text = request.form['text']  # Vulnerability here, as it's not sanitized
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
@@ -118,7 +119,7 @@ def new_posts():
         print(f"An error occurred: {e}")
     finally:
         con.close()
-    return render_template('add_posts.html')
+    return render_template('add_posts.html', user = user)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_screen():
