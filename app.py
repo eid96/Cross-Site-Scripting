@@ -107,10 +107,10 @@ def all_posts():
 def new_posts():
     # Function to add new blogposts
     user = session.get('username_or_email')
-    #title = request.form['title']  # Vulnerability here, as it's not sanitized
-    #text = request.form['text']  # Vulnerability here, as it's not sanitized
-    title = escape(request.form['title']) #Sanitized imput from user
-    text = escape(request.form['text']) #Sanitized imput from user
+    title = request.form['title']  # Vulnerability here, as it's not sanitized
+    text = request.form['text']  # Vulnerability here, as it's not sanitized
+    #title = escape(request.form['title']) #Sanitized imput from user
+    #text = escape(request.form['text']) #Sanitized input from user
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
@@ -181,11 +181,13 @@ def bleaching():
     print("function to bleach")
 
 def has_password():
-    print("Hashind")
+    print("Hashing")
 
 
 
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
+    # app.config['SESSION_COOKIE_HTTPONLY'] = False #will allow us to get session cookies if we want
+    # to create a script for it
     app.run(host='0.0.0.0', port=5000)
