@@ -1,8 +1,9 @@
 import os
-
-from flask import Flask, render_template, request, session, url_for, redirect
+import bleach
+from flask import Flask, render_template, request, session, url_for, redirect, escape
 import sqlite3
 from datetime import datetime
+import hashlib
 
 app = Flask(__name__)
 
@@ -84,7 +85,8 @@ def insert():
 @app.route('/add_posts', methods=['GET', 'POST'])
 def add_posts():
     # render html page "add_posts"
-    return render_template('add_posts.html')
+    user = session.get('username_or_email')
+    return render_template('add_posts.html', user = user)
 
 
 @app.route('/Posts', methods=['GET', 'POST'])
@@ -104,8 +106,11 @@ def all_posts():
 @app.route('/new_posts', methods=['POST'])
 def new_posts():
     # Function to add new blogposts
-    title = request.form['title']  # Vulnerability here, as it's not sanitized
-    text = request.form['text']  # Vulnerability here, as it's not sanitized
+    user = session.get('username_or_email')
+    #title = request.form['title']  # Vulnerability here, as it's not sanitized
+    #text = request.form['text']  # Vulnerability here, as it's not sanitized
+    title = escape(request.form['title']) #Sanitized imput from user
+    text = escape(request.form['text']) #Sanitized imput from user
     date = datetime.now().strftime("%Y-%m-%d %H:%M")  # Convert the datetime object to string
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
@@ -117,7 +122,7 @@ def new_posts():
         print(f"An error occurred: {e}")
     finally:
         con.close()
-    return render_template('add_posts.html')
+    return render_template('add_posts.html', user = user)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_screen():
@@ -151,8 +156,32 @@ def logout():
     return redirect(url_for('home'))
 
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        register_user()
+    return render_template("register.html")
+def register_user():
+    email = request.form['email']
+    username = request.form['username']
+    password = request.form['password']
+    confirm_password = request.form['confirm-password']
+    con = sqlite3.connect('Blog.db')
+    cur = con.cursor()
+    if password == confirm_password:
+        cur.execute("INSERT INTO users (email, username, password) VALUES (?, ?, ?)"
+                    , (email, username, password) )
+        con.commit()
+        con.close()
+        return redirect(url_for('home'))
+    else:
+        print("Password did not match")
 
+def bleaching():
+    print("function to bleach")
 
+def has_password():
+    print("Hashind")
 
 
 

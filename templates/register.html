@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Add New Post</title>
+    <title>Register new user</title>
     <style>
         .post-form {
             max-width: 600px;
@@ -55,24 +55,23 @@
     </style>
 </head>
 <body>
-    {% if user %}
+
     <div class="post-form">
-        <form action="/new_posts" method="post">
+        <form action="/register" method="post">
             <div class="input-group">
-                <label for="title">Title</label>
-                <input type="text" id="title" name="title" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                 <label for="username">Username</label>
+                <input type="username" id="username" name="username" required>
+                 <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                 <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required>
             </div>
-            <div class="input-group">
-                <label for="text">Text</label>
-                <textarea id="text" name="text" rows="4" style="width: calc(100% - 20px);" required></textarea>
-            </div>
-            <button type="submit" class="submit-btn">Add Post</button>
+            <button type="submit" class="submit-btn">Register</button>
         </form>
         <a href="/" class="back-btn">Back to Home</a>
     </div>
-        {% else %}
-        <h1>HAHA u thought</h1>
-        <a href="/" class="back-btn">Back to Home</a>
-        {% endif %}
+
 </body>
 </html>
