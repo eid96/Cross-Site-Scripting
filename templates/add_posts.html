@@ -55,7 +55,7 @@
     </style>
 </head>
 <body>
-
+    {% if user %}
     <div class="post-form">
         <form action="/new_posts" method="post">
             <div class="input-group">
@@ -70,6 +70,9 @@
         </form>
         <a href="/" class="back-btn">Back to Home</a>
     </div>
-
+        {% else %}
+        <h1>HAHA u thought</h1>
+        <a href="/" class="back-btn">Back to Home</a>
+        {% endif %}
 </body>
 </html>

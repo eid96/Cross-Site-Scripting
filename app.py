@@ -1,5 +1,5 @@
 import os
-
+import bleach
 from flask import Flask, render_template, request, session, url_for, redirect
 import sqlite3
 from datetime import datetime
@@ -84,7 +84,8 @@ def insert():
 @app.route('/add_posts', methods=['GET', 'POST'])
 def add_posts():
     # render html page "add_posts"
-    return render_template('add_posts.html')
+    user = session.get('username_or_email')
+    return render_template('add_posts.html', user = user)
 
 
 @app.route('/Posts', methods=['GET', 'POST'])
