@@ -46,7 +46,9 @@
 <body>
 
     <div class="post">
+        <!--Basic shite to show entire post, -->
         <div class="title">{{ data[1] |safe }}</div>
+        <!-- |safe is used to safely render html code from db. Used to demonstrate xss attacl -->
         <div class="text">{{ data[2] | safe }}</div>
         <div class="date">Date Written: {{ data[3] }}</div>
     </div>

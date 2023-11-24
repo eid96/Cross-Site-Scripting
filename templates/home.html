@@ -54,9 +54,11 @@
     <div class="container">
         <h1>Blog</h1>
         {% if user %}
+        <!--Shows logout and add post. Logout is not a page but ends sesssion, and is derfore not a redirect -->
         <a class="back-btn" href="/logout">Logout</a>
         <a class="back-btn" href="{{ url_for('add_posts') }}">Add post</a>
         {% else %}
+        <!--Buttons shown for thos who are not signed in -->
             <a class="back-btn" href="{{ url_for('login_screen') }}">Login</a>
         <a class="back-btn" href="{{ url_for('register') }}">Register</a>
         {% endif %}
@@ -66,6 +68,7 @@
                 <th>Titles</th>
             </tr>
             {% for row in data %}
+            <!--Loops through, shows, and allows redirect for all titles -->
             <tr>
                 <td><a href="{{ url_for('all_posts', id=row[0], title=row[1]) }}">{{ row[1]  |safe }}</a></td>
             </tr>
