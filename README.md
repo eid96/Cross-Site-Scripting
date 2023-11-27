@@ -27,3 +27,9 @@ Demonstrate that your mitigation strategies are effective.
 * docker build -t xss .
 * docker run -d -p 5000:5000 xss
 * docker run xss 
+
+### Changes for task 3: 
+* All of userfunctionality related to the table is moved to static/user_functions.py
+* All blog post related are moved to posts.py 
+* HTML related coode still found in "templates#/.." 
+* simple routing still found in app.py
