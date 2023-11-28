@@ -3,13 +3,10 @@ import bleach
 from flask import Flask, render_template, request, session, url_for, redirect, escape
 import sqlite3
 from datetime import datetime
-import hashlib
 
-import  sys
-sys.path.append('static')
 
-from users_functions import create_usertable, insert_users, user_login, register_user, logout
-from posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
+from static.users_functions import create_usertable, insert_users, user_login, register_user, logout
+from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
 
 
 app = Flask(__name__)
@@ -53,7 +50,7 @@ def all_posts():
     con.close()
     return render_template('Posts.html', data=data)
 
-
+# todo: split opp denne til routing og input to db??
 @app.route('/new_posts', methods=['POST'])
 def new_posts():
     # Function to add new blogposts
