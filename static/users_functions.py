@@ -160,11 +160,9 @@ def get_user_by_username_or_email(identity):
     con.close()
     return user
 
-def table_exists(table_name):
+def store_totp_secret(email, totp_secret):
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
-    cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-    result = cur.fetchone()
+    cur.execute("UPDATE users SET totp_secret=? WHERE email=?", (totp_secret, email))
+    con.commit()
     con.close()
-    return result is not None
-

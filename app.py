@@ -10,7 +10,7 @@ from pyotp import totp
 
 from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
                                     generate_totp_uri, get_totp_secret_for_user, recreate_usertable, verify_pw,
-                                    verify_totp, get_user_by_username_or_email, table_exists)
+                                    verify_totp, get_user_by_username_or_email, store_totp_secret, hash_pw)
 from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
 
 app = Flask(__name__)
@@ -90,7 +90,9 @@ def login_screen():
             totp_secret = user[5]  # Assuming the TOTP secret is stored in the sixth column
 
             if totp_secret:
+                # Continue with TOTP verification using the retrieved secret
                 if verify_totp(totp_secret, totp_input):
+                    # TOTP is valid, proceed with the login
                     flash('Welcome ' + user[2], 'success')
                     session['username_or_email'] = username_or_email
                     return redirect(url_for('home'))
@@ -114,17 +116,36 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-
-    #calls register function if the method is post
     if request.method == 'POST':
         register_user()
         email = request.form['email']
-        key = pyotp.random_base32()  # Replace with a secure way to generate a key
-        # Generate and save TOTP URI
-        totp_uri, img_path = generate_totp_uri(email, key, app)
-        return render_template("register.html", totp_uri=totp_uri, img_path=img_path)
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm-password']
+
+        # Check if passwords match
+        if password == confirm_password:
+            password_hashed, random_val = hash_pw(password)
+
+            # Generate and store TOTP secret for the user
+            totp_secret = pyotp.random_base32()
+            store_totp_secret(email, totp_secret)  # Implement this function to store the secret
+
+            # Continue with other registration steps
+            # ...
+
+            totp_uri, img_path = generate_totp_uri(email, totp_secret, app)
+            return render_template("register.html", totp_uri=totp_uri, img_path=img_path)
+
+        else:
+            print("Password did not match")
 
     return render_template("register.html")
+
+@app.route('/server-time')
+def server_time():
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return f"Server Time: {current_time}"
 
 
 if __name__ == '__main__':
