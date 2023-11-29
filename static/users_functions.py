@@ -120,27 +120,7 @@ def generate_totp_uri(email, key, app):
 
     return uri, img_path
 
-def get_totp_secret_for_user(user):
-    con = sqlite3.connect('Blog.db')
-    cur = con.cursor()
-
-    # Assuming user[1] is the email and user[2] is the username (adjust as needed)
-    cur.execute("SELECT totp_secret FROM users WHERE email=? OR username=?", (user[1], user[2]))
-    totp_secret = cur.fetchone()
-
-    con.close()
-
-    return totp_secret[0] if totp_secret else None
-
-def recreate_usertable():
-    con = sqlite3.connect('Blog.db')
-    cur = con.cursor()
-    cur.execute('DROP TABLE IF EXISTS users')
-    con.commit()
-    con.close()
-    create_usertable()
-
-
+# Verify a Time-based One-Time Password (TOTP)
 def verify_totp(totp_secret, totp_input):
     print("TOTP Secret:", totp_secret)
     print("Input TOTP:", totp_input)
@@ -151,7 +131,7 @@ def verify_totp(totp_secret, totp_input):
     print("Verification Result:", result)
 
     return result
-
+# Retrieve user information based on email or username
 def get_user_by_username_or_email(identity):
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
@@ -160,6 +140,7 @@ def get_user_by_username_or_email(identity):
     con.close()
     return user
 
+# Store the TOTP secret in the database
 def store_totp_secret(email, totp_secret):
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()

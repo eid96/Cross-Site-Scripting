@@ -8,9 +8,7 @@ from datetime import datetime
 
 from pyotp import totp
 
-from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
-                                    generate_totp_uri, get_totp_secret_for_user, recreate_usertable, verify_pw,
-                                    verify_totp, get_user_by_username_or_email, store_totp_secret, hash_pw)
+from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout, generate_totp_uri, verify_pw, verify_totp, get_user_by_username_or_email, store_totp_secret, hash_pw)
 from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
 
 app = Flask(__name__)
@@ -96,12 +94,6 @@ def login_screen():
                     flash('Welcome ' + user[2], 'success')
                     session['username_or_email'] = username_or_email
                     return redirect(url_for('home'))
-                else:
-                    flash('Invalid TOTP. Please try again.', 'error')
-            else:
-                flash('TOTP secret not found for the user.', 'error')
-        else:
-            flash('Invalid username or password. Please try again.', 'error')
 
     return render_template('login.html')
 
@@ -142,17 +134,9 @@ def register():
 
     return render_template("register.html")
 
-@app.route('/server-time')
-def server_time():
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return f"Server Time: {current_time}"
-
 
 if __name__ == '__main__':
-    # recreate_usertable()
 
-    # app.config['SESSION_COOKIE_HTTPONLY'] = False #will allow us to get session cookies if we want
-    # to create a script for it
 
     #Expose the ports and host, done so dockerfile will work
     app.run(host='0.0.0.0', port=5000)
