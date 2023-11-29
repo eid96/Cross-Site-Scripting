@@ -7,6 +7,7 @@ from flask import request, session, url_for, redirect
 def create_usertable():
     con = sqlite3.connect('Blog.db')
     cur = con.cursor()
+    #adding the random value to db (salt)
     cur.execute('''CREATE TABLE IF NOT EXISTS users (
                id INTEGER PRIMARY KEY,
                email TEXT NOT NULL,
@@ -83,9 +84,14 @@ def logout():
 
 # Implementation of hashing using hasblib
 def hash_pw(password):
+    #random_val= salt, went away from tranditional naming
+    #Generates and stores a 32*2 bytes of random characters
     random_val = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
+
+    #Computes the hash for the given password and adds the random val
     password_hashed = hashlib.pbkdf2_hmac('sha256',
                                           password.encode('utf-8'), random_val, 100000)
+    #Check if password was hashed
     print("print hash from hash_pw: ", password_hashed)
     return password_hashed, random_val
 
@@ -98,5 +104,5 @@ def verify_pw(db_pw, db_random_val, ipw):
                                           100000)
     print("og password : ", password_hashed)
     print("db password: ", db_pw)
-    # Compare hashed password
+    # Compare hashed password with plain text password
     return password_hashed == db_pw
