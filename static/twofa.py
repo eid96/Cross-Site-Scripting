@@ -28,7 +28,11 @@ def get_totp_secret_for_user(user):
     return totp_secret[0] if totp_secret else None
 
 
+
+
+
 def verify_totp(totp_secret, totp_input):
+    print("TOTP Secret:", totp_secret)
     print("Input TOTP:", totp_input)
 
     totp = pyotp.TOTP(totp_secret)
