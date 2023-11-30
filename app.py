@@ -1,16 +1,20 @@
 import os
 import bleach
-from flask import Flask, render_template, request, session, url_for, redirect, escape
+import pyotp
+import qrcode
+from flask import Flask, render_template, request, session, url_for, redirect, flash
 import sqlite3
 from datetime import datetime
 
+from pyotp import totp
 
-from static.users_functions import create_usertable, insert_users, user_login, register_user, logout
+from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
+                                    generate_totp_uri, get_totp_secret_for_user, recreate_usertable, verify_pw,
+                                    verify_totp, get_user_by_username_or_email, store_totp_secret, hash_pw)
 from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
 
-
 app = Flask(__name__)
-
+app.secret_key = os.urandom(24)
 
 
 @app.route('/')
@@ -75,14 +79,32 @@ def new_posts():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_screen():
-  #post login
     if request.method == 'POST':
         username_or_email = request.form['username_or_email']
         password = request.form['password']
-        if user_login(username_or_email, password):
-            #redirect to homescreen
-            return redirect(url_for('home'))
+        totp_input = request.form['totp_input']
+
+        user = get_user_by_username_or_email(username_or_email)
+
+        if user and verify_pw(user[3], user[4], password):
+            totp_secret = user[5]  # Assuming the TOTP secret is stored in the sixth column
+
+            if totp_secret:
+                # Continue with TOTP verification using the retrieved secret
+                if verify_totp(totp_secret, totp_input):
+                    # TOTP is valid, proceed with the login
+                    flash('Welcome ' + user[2], 'success')
+                    session['username_or_email'] = username_or_email
+                    return redirect(url_for('home'))
+                else:
+                    flash('Invalid TOTP. Please try again.', 'error')
+            else:
+                flash('TOTP secret not found for the user.', 'error')
+        else:
+            flash('Invalid username or password. Please try again.', 'error')
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
@@ -94,15 +116,40 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    #calls register function if the method is post
     if request.method == 'POST':
         register_user()
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm-password']
+
+        # Check if passwords match
+        if password == confirm_password:
+            password_hashed, random_val = hash_pw(password)
+
+            # Generate and store TOTP secret for the user
+            totp_secret = pyotp.random_base32()
+            store_totp_secret(email, totp_secret)  # Implement this function to store the secret
+
+            # Continue with other registration steps
+            # ...
+
+            totp_uri, img_path = generate_totp_uri(email, totp_secret, app)
+            return render_template("register.html", totp_uri=totp_uri, img_path=img_path)
+
+        else:
+            print("Password did not match")
+
     return render_template("register.html")
+
+@app.route('/server-time')
+def server_time():
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return f"Server Time: {current_time}"
 
 
 if __name__ == '__main__':
-    # Random 24-byte secret key for secure session management in Flask.
-    app.secret_key = os.urandom(24)
+    # recreate_usertable()
 
     # app.config['SESSION_COOKIE_HTTPONLY'] = False #will allow us to get session cookies if we want
     # to create a script for it

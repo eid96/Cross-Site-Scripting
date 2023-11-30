@@ -69,6 +69,9 @@
                  <label for="confirm-password">Confirm Password</label>
                 <input type="password" id="confirm-password" name="confirm-password" required>
             </div>
+            {% if totp_uri %}
+            <img src="{{ url_for('static', filename='qrcodes/QRcode.png') }}" alt="QR Code">
+            {% endif %}
             <button type="submit" class="submit-btn">Register</button>
         </form>
         <a href="/" class="back-btn">Back to Home</a>
