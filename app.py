@@ -8,9 +8,12 @@ from datetime import datetime
 from pyotp import totp
 
 from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
-                                    generate_totp_uri, get_totp_secret_for_user, recreate_usertable, verify_pw,
-                                    verify_totp, get_user_by_username_or_email, store_totp_secret, hash_pw)
+                                     verify_pw, hash_pw)
+
 from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
+
+from static.twofa import generate_totp_uri, get_totp_secret_for_user, verify_totp, get_user_by_username_or_email, store_totp_secret
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
