@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import hashlib
 import pyotp
@@ -27,17 +28,7 @@ def get_totp_secret_for_user(user):
     return totp_secret[0] if totp_secret else None
 
 
-def recreate_usertable():
-    con = sqlite3.connect('Blog.db')
-    cur = con.cursor()
-    cur.execute('DROP TABLE IF EXISTS users')
-    con.commit()
-    con.close()
-    create_usertable()
-
-
 def verify_totp(totp_secret, totp_input):
-    print("TOTP Secret:", totp_secret)
     print("Input TOTP:", totp_input)
 
     totp = pyotp.TOTP(totp_secret)
