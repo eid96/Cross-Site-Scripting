@@ -11,7 +11,8 @@ from flask_limiter.util import get_remote_address
 from flask import jsonify
 
 from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
-                                     verify_pw, hash_pw)
+                                     verify_pw, hash_pw,  authenticate_user,
+                                    incorrect_input, lock_timer)
 
 from static.posts import create_post_table, insert_posts, get_all_posts, get_post_by_id
 
@@ -82,6 +83,7 @@ def new_posts():
         cur.execute("INSERT INTO posts (title, text, date) VALUES (?, ?, ?)", (title, text, date))
         con.commit()
         print("Added to table")
+        return render_template(url_for('home'))
     except sqlite3.Error as e:
         print(f"An error occurred: {e}")
     finally:
@@ -92,9 +94,9 @@ def new_posts():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("3 per minute")
+#dont thinklimiter works
+@limiter.limit("3 per minute", key_func=get_remote_address)
 def login_screen():
-    #check if there is not an ongoing lockout
     if 'locked_out' not in session:
         session['locked_out'] = False
         print("lockout value 1: ", session['locked_out'])
@@ -104,55 +106,29 @@ def login_screen():
         session['wrong_input'] = 0
 
     if request.method == 'POST' and not session['locked_out']:
-        # Check if user is still in lockout period
-        if session['lockout_start_time']:
-            time_elapsed = (datetime.utcnow().replace(tzinfo=timezone.utc) - session['lockout_start_time']).seconds
-            if time_elapsed < 30:
-                remaining_time = 30 - time_elapsed
-                flash(f'Too many incorrect login attempts. Please try again later. You will be allowed to try again in {remaining_time} seconds.', 'error')
-                return render_template('login.html')
+        lock_timer_res = lock_timer()
 
-            # Reset the wrong input count and lockout status
-            session['wrong_input'] = 0
-            session['locked_out'] = False
-            session['lockout_start_time'] = None
+        if lock_timer_res:
+            print("User is still in lockout period.")
+            return render_template('login.html')
 
         username_or_email = request.form['username_or_email']
         password = request.form['password']
         totp_input = request.form['totp_input']
 
-        user = get_user_by_username_or_email(username_or_email)
-
-        if user and verify_pw(user[3], user[4], password):
-            totp_secret = user[5]
-
-            if totp_secret and verify_totp(totp_secret, totp_input):
-                flash('Welcome ' + user[2], 'success')
-                session['username_or_email'] = username_or_email
-                return redirect(url_for('home'))
-
+        if authenticate_user(username_or_email, password, totp_input):
+            return redirect(url_for('home'))
         else:
             print('Invalid username or password. Please try again.')
+            incorrect_input()
 
-            # Initialize 'wrong_input' if it doesn't exist
-            if 'wrong_input' not in session:
-                session['wrong_input'] = 0
-            #increase counter for wrong inputs
-            session['wrong_input'] += 1
-            print("sign-in attempts: ", session['wrong_input'])
-
-            if session['wrong_input'] >= 3:
-                session['locked_out'] = True
-                session['lockout_start_time'] = datetime.utcnow().replace(tzinfo=timezone.utc)
-                flash(
-                    'Too many incorrect login attempts. Please try again later. You will be allowed to try again in 30 seconds.',
-                    'error')
-                #resetts the values for next round of sign in attempts
-                session['wrong_input'] = 0
-                session['locked_out'] = False
-                session['lockout_start_time'] = None
+    lock_timer_res = lock_timer()
+    if lock_timer_res:
+        print("User is still in lockout period.")
+        return render_template('login.html')
 
     return render_template('login.html')
+
 @app.route('/logout')
 def logout():
     # Clear the username or email from the session
@@ -160,7 +136,7 @@ def logout():
     print("Signed out")
     return redirect(url_for('home'))
 
-#todo: create own register function?
+#todo: redo register?
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 
@@ -207,7 +183,6 @@ def ratelimit_error(e):
         error_message = f"Too many incorrect login attempts. Please try again in {seconds} seconds."
 
     return jsonify(error="ratelimit exceeded", message=error_message), 429
-
 
 
 if __name__ == '__main__':

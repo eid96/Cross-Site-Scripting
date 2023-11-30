@@ -2,12 +2,12 @@ import os
 import sqlite3
 import hashlib
 from datetime import time
-
+from datetime import datetime, timedelta, timezone
 import pyotp
 import qrcode
-from flask import Flask, request, session, url_for, redirect, render_template
+from flask import Flask, request, session, url_for, redirect, render_template, flash
 from static.twofa import (verify_totp, get_user_by_username_or_email,
-    store_totp_secret)
+                          store_totp_secret)
 
 
 def create_usertable():
@@ -85,6 +85,7 @@ def register_user():
         con.commit()
         con.close()
         print("User registered")
+
     else:
         print("Password did not match")
 
@@ -112,4 +113,52 @@ def verify_pw(db_pw, db_random_val, ipw):
     # Compare hashed password with plain text password
     return password_hashed == db_pw
 
-#Function that prohibits user to sign if they type the worng password
+
+def authenticate_user(username_or_email, password, totp_input):
+    user = get_user_by_username_or_email(username_or_email)
+
+    if user and verify_pw(user[3], user[4], password):
+        totp_secret = user[5]
+
+        if totp_secret and verify_totp(totp_secret, totp_input):
+            flash('Welcome ' + user[2], 'success')
+            session['username_or_email'] = username_or_email
+            # Authentication successful
+            return True
+            # Authentication failed
+    return False
+
+def incorrect_input():
+    # Initialize 'wrong_input' if it doesn't exist
+    if 'wrong_input' not in session:
+        session['wrong_input'] = 0
+
+    # Increase counter for wrong inputs
+    session['wrong_input'] += 1
+    print("sign-in attempts: ", session['wrong_input'])
+
+    if session['wrong_input'] == 3:
+        session['locked_out'] = True
+        session['lockout_start_time'] = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+
+
+def lock_timer():
+    # Check if the user is still in the lockout period
+    if session['lockout_start_time']:
+        time_elapsed = (datetime.utcnow().replace(tzinfo=timezone.utc) - session['lockout_start_time']).seconds
+        #Check how much time has gone and print
+        if time_elapsed <= 60:
+            remaining_time = 60 - time_elapsed
+            print(f'Remaining lockout time: {remaining_time} seconds')  # Added countdown print statement
+            flash(
+                f'Too many failed attempts.  Try again later in {int(remaining_time)} seconds.',
+                'error')
+            return True  # User is still in lockout period
+        else:
+            # Reset the wrong input count and lockout
+            session['wrong_input'] = 0
+            session['locked_out'] = False
+            session['lockout_start_time'] = None
+    # No lockout
+    return False
