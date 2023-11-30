@@ -1,5 +1,4 @@
 import os
-import bleach
 import pyotp
 import qrcode
 from flask import Flask, render_template, request, session, url_for, redirect, flash
