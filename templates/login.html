@@ -43,6 +43,7 @@
         .login-box input[type="submit"]:hover {
             background: white;
         }
+
         .back-btn {
             width: 100%;
             padding: 8px;
@@ -53,24 +54,36 @@
             cursor: pointer;
         }
     </style>
-</head>
 
 <body>
     <div class="login-box">
-        <h2>Login</h2>
-        <!--Basic sign in functionality  -->
+    <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+            <h2>Login</h2>
+            <!-- Basic sign-in functionality -->
+            <p>{{ session['wrong_input'] }} out of 3 attempts used</p>
             <form action="/login" method="post">
-            <label for="username_or_email">Username or Email:</label><br>
-            <input type="text" id="username_or_email" name="username_or_email"><br>
-            <label for="password">Password:</label><br>
-            <input type="password" id="password" name="password"><br><br>
-                <!--Dobbeltsjekk value-->
+                <label for="username_or_email">Username or Email:</label><br>
+                <input type="text" id="username_or_email" name="username_or_email" required><br>
+                <label for="password">Password:</label><br>
+                <input type="password" id="password" name="password" required><br><br>
+                <!-- Double-check value -->
                 <label for="totp_input">Enter your Two-Factor code from Google Authenticator:</label>
                 <input type="text" id="totp_input" name="totp_input" required>
-                <input type="submit" value="Log In" ><br><br>
-            <a href="/" class="back-btn">Back to Home</a>
+                <input type="submit" id="loginButton" value="Log In" ><br><br>
+                <a href="/" class="back-btn">Back to Home</a>
+            </form>
 
-        </form>
     </div>
+
 </body>
+
 </html>
