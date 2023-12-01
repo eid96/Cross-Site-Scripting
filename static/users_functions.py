@@ -49,22 +49,6 @@ def insert_users():
         con.commit()
     con.close()
 
-
-def user_login(identity, password):
-    con = sqlite3.connect('Blog.db')
-    cur = con.cursor()
-    cur.execute("SELECT * FROM users WHERE email=? OR username=?", (identity, identity))
-    user = cur.fetchone()
-
-    if user and verify_totp(user[5], password):
-        session['username_or_email'] = identity
-        con.close()
-        return user
-    else:
-        con.close()
-        return None
-
-
 def register_user():
     # sets user input for registering a new user
     email = request.form['email']
