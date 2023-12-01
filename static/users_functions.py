@@ -129,7 +129,7 @@ def authenticate_user(username_or_email, password, totp_input):
     return False
 
 def incorrect_input():
-    # Initialize 'wrong_input' if it doesn't exist
+    # Initialize 'wrong_input' there is none in session
     if 'wrong_input' not in session:
         session['wrong_input'] = 0
 

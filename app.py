@@ -102,8 +102,7 @@ def login_screen():
         print("lockout value 1: ", session['locked_out'])
         session['lockout_start_time'] = None
 
-    if 'wrong_input' not in session:
-        session['wrong_input'] = 0
+
 
     if request.method == 'POST' and not session['locked_out']:
         lock_timer_res = lock_timer()
