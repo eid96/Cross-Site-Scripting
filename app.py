@@ -1,7 +1,9 @@
+import requests
 import os
 import pyotp
 import qrcode
 from flask import Flask, render_template, request, session, url_for, redirect, flash
+from authlib.integrations.flask_client import OAuth
 import sqlite3
 from datetime import datetime, timedelta, timezone
 import time
@@ -10,7 +12,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask import jsonify
 
-from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
+
+from static.users_functions import (create_usertable, insert_users, register_user, logout,
                                      verify_pw, hash_pw,  authenticate_user,
                                     incorrect_input, lock_timer)
 
@@ -20,16 +23,86 @@ from static.twofa import (generate_totp_uri, get_totp_secret_for_user,
                           verify_totp, get_user_by_username_or_email,
                           store_totp_secret)
 
-
-
-
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 limiter = Limiter(app)
 
-@app.before_request
-def before_request():
-    limiter.key_func = lambda: request.remote_addr
+
+oauth = OAuth(app)
+# Constants
+CLIENT_ID = "1019601629253-miad0a01ep99ut13e8ehpkijt87dfnf3.apps.googleusercontent.com"
+CLIENT_SECRET = "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"
+REDIRECT_URI = "http://127.0.0.1:5000/auth"
+
+
+@app.route('/google_login')
+def google_login():
+    auth_url = (f"https://accounts.google.com/o/oauth2/auth?client_id={CLIENT_ID}"
+                f"&redirect_uri={REDIRECT_URI}"
+                f"&response_type=code&scope=openid%20profile%20email")
+    return redirect(auth_url)
+
+# Callback route
+@app.route('/auth')
+def auth():
+    auth_code = request.args.get('code')
+    # Exchanging auth code for access tok
+    token_data = {
+        'code': auth_code,
+        'redirect_uri': REDIRECT_URI,
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'authorization_code'
+    }
+    tok_response = requests.post("https://oauth2.googleapis.com/token", data=token_data)
+    tok_info = tok_response.json()
+    access_tok = tok_info['access_token']
+
+    # access protected resource
+    headers = {'Authorization': f"Bearer {access_tok}"}
+    user_info = requests.get("http://127.0.0.1:5000/protected_resource", headers=headers)
+    user = user_info.json()
+
+    session['username_or_email'] = user
+    print(user)
+
+
+    return redirect(url_for('home'))
+
+@app.route("/protected_resource", methods=["GET"])
+def protected_resource():
+    # Extract access token from request's auth header.
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'error': 'Authorization header is missing'}), 401
+
+    tok_parts = auth_header.split()
+    if len(tok_parts) != 2 or tok_parts[0].lower() != 'bearer':
+        return jsonify({'error': 'Invalid authorization header'}), 401
+
+    access_tok = tok_parts[1]
+
+    # Validate access token.
+    tok_info_url = "https://www.googleapis.com/oauth2/v1/tokeninfo"
+    params = {'access_token': access_tok}
+    tok_info = requests.get(tok_info_url, params=params)
+    tok_info_json = tok_info.json()
+
+    print("Hello from Validate the access token")
+
+    if 'error' in tok_info_json:
+        return jsonify({'error': 'Invalid access token'}), 401
+
+
+    # If valid, acces granted to protected resource and return data
+    user_info_url = "https://openidconnect.googleapis.com/v1/userinfo"
+    headers = {'Authorization': f"Bearer {access_tok}"}
+    user_info = requests.get(user_info_url, headers=headers)
+    user = user_info.json()
+
+    return jsonify(user)
+
+
 @app.route('/')
 def home():
     #calls create_ table function
@@ -88,21 +161,20 @@ def new_posts():
         print(f"An error occurred: {e}")
     finally:
         con.close()
-        #todo, change redirect
+        #todo, change redirect?
     return render_template('add_posts.html', user = user)
 
 
 
 @app.route('/login', methods=['GET', 'POST'])
-#dont thinklimiter works
-@limiter.limit("3 per minute", key_func=get_remote_address)
 def login_screen():
+    # Initialize 'lockout' there is none in session
     if 'locked_out' not in session:
         session['locked_out'] = False
-        print("lockout value 1: ", session['locked_out'])
         session['lockout_start_time'] = None
-
-
+    # Initialize 'wrong_input' there is none in session
+    if 'wrong_input' not in session:
+        session['wrong_input'] = 0
 
     if request.method == 'POST' and not session['locked_out']:
         lock_timer_res = lock_timer()
@@ -160,28 +232,9 @@ def register():
         else:
             print("Password did not match")
 
-
-
     return render_template("register.html")
 
-#add as a function, not route perhaps?
-@app.route('/server-time')
-def server_time():
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return f"Server Time: {current_time}"
 
-
-@app.errorhandler(429)
-def ratelimit_error(e):
-    remaining_time = int(e.description.split()[3])  # Extract remaining time from the error message
-    minutes, seconds = divmod(remaining_time, 60)
-
-    if minutes > 0:
-        error_message = f"Too many incorrect login attempts. Please try again in {minutes} minutes."
-    else:
-        error_message = f"Too many incorrect login attempts. Please try again in {seconds} seconds."
-
-    return jsonify(error="ratelimit exceeded", message=error_message), 429
 
 
 if __name__ == '__main__':
@@ -190,4 +243,4 @@ if __name__ == '__main__':
     # to create a script for it
 
     #Expose the ports and host, done so dockerfile will work
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug = True)

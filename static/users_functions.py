@@ -49,6 +49,7 @@ def insert_users():
         con.commit()
     con.close()
 
+
 def register_user():
     # sets user input for registering a new user
     email = request.form['email']
@@ -109,13 +110,11 @@ def authenticate_user(username_or_email, password, totp_input):
             session['username_or_email'] = username_or_email
             # Authentication successful
             return True
-            # Authentication failed
+    # Authentication failed
     return False
 
+
 def incorrect_input():
-    # Initialize 'wrong_input' there is none in session
-    if 'wrong_input' not in session:
-        session['wrong_input'] = 0
 
     # Increase counter for wrong inputs
     session['wrong_input'] += 1
@@ -126,17 +125,18 @@ def incorrect_input():
         session['lockout_start_time'] = datetime.utcnow().replace(tzinfo=timezone.utc)
 
 
-
 def lock_timer():
+
     # Check if the user is still in the lockout period
     if session['lockout_start_time']:
         time_elapsed = (datetime.utcnow().replace(tzinfo=timezone.utc) - session['lockout_start_time']).seconds
-        #Check how much time has gone and print
+        # Check how much time has gone and print
         if time_elapsed <= 60:
             remaining_time = 60 - time_elapsed
-            print(f'Remaining lockout time: {remaining_time} seconds')  # Added countdown print statement
+            # Added countdown print statement
+            print(f'Remaining lockout time: {remaining_time} seconds')
             flash(
-                f'Too many failed attempts.  Try again later in {int(remaining_time)} seconds.',
+                f'Too many failed attempts.  Try again in {int(remaining_time)} seconds.',
                 'error')
             return True  # User is still in lockout period
         else:
