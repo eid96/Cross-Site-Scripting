@@ -27,14 +27,18 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 limiter = Limiter(app)
 
+
 #Config for oauth, can probalby be moved to seperate file
 oauth = OAuth(app)
 google = oauth.register(
-   #Insert from overleaf/discord
+#insert form overleafe/discord
 )
+#soruce: https://github.com/Vuka951/tutorial-code/tree/master
 @app.route('/google_login', methods=['GET', 'POST'])
 def google_login():
-    google = oauth.create_client('google')  # create the google oauth client
+    # Create google Oauth2 client
+    google = oauth.create_client('google')
+    #Redirect based on info in "auth"
     redirect_uri = url_for('auth', _external=True)
     return google.authorize_redirect(redirect_uri)
 
@@ -44,17 +48,19 @@ def auth():
     google = oauth.create_client('google')
     # Access token from google (needed to get user info)
     token = google.authorize_access_token()
-    # userinfo contains stuff u specified in the scope
+    # get specified useringo
     resp = google.get('userinfo')
     user = resp.json()
-    #session['email'] = user_info
     session['username_or_email'] =   user
     print(user)
-    # permanent session browser needs to be closed to quit, hsa to be changed
-    #session.permanent = True
     return redirect(url_for('home'))
 
 
+#todo:
+@app.route("/protected_resource", methods=["GET"])
+def protected_resource():
+    # A protected endpoint the client can access using the access token.
+    print("hello")
 
 @app.before_request
 def before_request():
