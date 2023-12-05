@@ -110,13 +110,11 @@ def authenticate_user(username_or_email, password, totp_input):
             session['username_or_email'] = username_or_email
             # Authentication successful
             return True
-            # Authentication failed
-
+    # Authentication failed
     return False
 
 
 def incorrect_input():
-    # Initialize 'wrong_input' there is none in session
 
     # Increase counter for wrong inputs
     session['wrong_input'] += 1

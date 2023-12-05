@@ -1,4 +1,4 @@
-
+import requests
 import os
 import pyotp
 import qrcode
@@ -28,43 +28,81 @@ app.secret_key = os.urandom(24)
 limiter = Limiter(app)
 
 
-#Config for oauth, can probalby be moved to seperate file
 oauth = OAuth(app)
-google = oauth.register(
-#insert form overleafe/discord
-)
-#soruce: https://github.com/Vuka951/tutorial-code/tree/master
-@app.route('/google_login', methods=['GET', 'POST'])
-def google_login():
-    # Create google Oauth2 client
-    google = oauth.create_client('google')
-    #Redirect based on info in "auth"
-    redirect_uri = url_for('auth', _external=True)
-    return google.authorize_redirect(redirect_uri)
+# Constants
+CLIENT_ID = "1019601629253-miad0a01ep99ut13e8ehpkijt87dfnf3.apps.googleusercontent.com"
+CLIENT_SECRET = "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"
+REDIRECT_URI = "http://127.0.0.1:5000/auth"
 
-@app.route("/auth")
+
+@app.route('/google_login')
+def google_login():
+    auth_url = (f"https://accounts.google.com/o/oauth2/auth?client_id={CLIENT_ID}"
+                f"&redirect_uri={REDIRECT_URI}"
+                f"&response_type=code&scope=openid%20profile%20email")
+    return redirect(auth_url)
+
+# Callback route
+@app.route('/auth')
 def auth():
-    # create the google oauth client
-    google = oauth.create_client('google')
-    # Access token from google (needed to get user info)
-    token = google.authorize_access_token()
-    # get specified useringo
-    resp = google.get('userinfo')
-    user = resp.json()
-    session['username_or_email'] =   user
+    auth_code = request.args.get('code')
+    # Exchanging auth code for access tok
+    token_data = {
+        'code': auth_code,
+        'redirect_uri': REDIRECT_URI,
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'authorization_code'
+    }
+    tok_response = requests.post("https://oauth2.googleapis.com/token", data=token_data)
+    tok_info = tok_response.json()
+    access_tok = tok_info['access_token']
+
+    # access protected resource
+    headers = {'Authorization': f"Bearer {access_tok}"}
+    user_info = requests.get("http://127.0.0.1:5000/protected_resource", headers=headers)
+    user = user_info.json()
+
+    session['username_or_email'] = user
     print(user)
+
+
     return redirect(url_for('home'))
 
-
-#todo:
 @app.route("/protected_resource", methods=["GET"])
 def protected_resource():
-    # A protected endpoint the client can access using the access token.
-    print("hello")
+    # Extract access token from request's auth header.
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({'error': 'Authorization header is missing'}), 401
 
-@app.before_request
-def before_request():
-    limiter.key_func = lambda: request.remote_addr
+    tok_parts = auth_header.split()
+    if len(tok_parts) != 2 or tok_parts[0].lower() != 'bearer':
+        return jsonify({'error': 'Invalid authorization header'}), 401
+
+    access_tok = tok_parts[1]
+
+    # Validate access token.
+    tok_info_url = "https://www.googleapis.com/oauth2/v1/tokeninfo"
+    params = {'access_token': access_tok}
+    tok_info = requests.get(tok_info_url, params=params)
+    tok_info_json = tok_info.json()
+
+    print("Hello from Validate the access token")
+
+    if 'error' in tok_info_json:
+        return jsonify({'error': 'Invalid access token'}), 401
+
+
+    # If valid, acces granted to protected resource and return data
+    user_info_url = "https://openidconnect.googleapis.com/v1/userinfo"
+    headers = {'Authorization': f"Bearer {access_tok}"}
+    user_info = requests.get(user_info_url, headers=headers)
+    user = user_info.json()
+
+    return jsonify(user)
+
+
 @app.route('/')
 def home():
     #calls create_ table function
@@ -123,7 +161,7 @@ def new_posts():
         print(f"An error occurred: {e}")
     finally:
         con.close()
-        #todo, change redirect
+        #todo, change redirect?
     return render_template('add_posts.html', user = user)
 
 
@@ -196,33 +234,7 @@ def register():
         else:
             print("Password did not match")
 
-
-
     return render_template("register.html")
-
-#add as a function, not route perhaps?
-@app.route('/server-time')
-def server_time():
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return f"Server Time: {current_time}"
-
-
-
-
-
-@app.errorhandler(429)
-def ratelimit_error(e):
-    remaining_time = int(e.description.split()[3])  # Extract remaining time from the error message
-    minutes, seconds = divmod(remaining_time, 60)
-
-    if minutes > 0:
-        error_message = f"Too many incorrect login attempts. Please try again in {minutes} minutes."
-    else:
-        error_message = f"Too many incorrect login attempts. Please try again in {seconds} seconds."
-
-    return jsonify(error="ratelimit exceeded", message=error_message), 429
-
-
 
 
 
