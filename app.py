@@ -167,8 +167,6 @@ def new_posts():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-#dont thinklimiter works
-@limiter.limit("3 per minute", key_func=get_remote_address)
 def login_screen():
     # Initialize 'lockout' there is none in session
     if 'locked_out' not in session:
