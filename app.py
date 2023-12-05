@@ -1,7 +1,9 @@
+
 import os
 import pyotp
 import qrcode
 from flask import Flask, render_template, request, session, url_for, redirect, flash
+from authlib.integrations.flask_client import OAuth
 import sqlite3
 from datetime import datetime, timedelta, timezone
 import time
@@ -10,7 +12,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask import jsonify
 
-from static.users_functions import (create_usertable, insert_users, user_login, register_user, logout,
+
+from static.users_functions import (create_usertable, insert_users, register_user, logout,
                                      verify_pw, hash_pw,  authenticate_user,
                                     incorrect_input, lock_timer)
 
@@ -20,12 +23,38 @@ from static.twofa import (generate_totp_uri, get_totp_secret_for_user,
                           verify_totp, get_user_by_username_or_email,
                           store_totp_secret)
 
-
-
-
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 limiter = Limiter(app)
+
+#Config for oauth, can probalby be moved to seperate file
+oauth = OAuth(app)
+google = oauth.register(
+   #Insert from overleaf/discord
+)
+@app.route('/google_login', methods=['GET', 'POST'])
+def google_login():
+    google = oauth.create_client('google')  # create the google oauth client
+    redirect_uri = url_for('auth', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route("/auth")
+def auth():
+    # create the google oauth client
+    google = oauth.create_client('google')
+    # Access token from google (needed to get user info)
+    token = google.authorize_access_token()
+    # userinfo contains stuff u specified in the scope
+    resp = google.get('userinfo')
+    user = resp.json()
+    #session['email'] = user_info
+    session['username_or_email'] =   user
+    print(user)
+    # permanent session browser needs to be closed to quit, hsa to be changed
+    #session.permanent = True
+    return redirect(url_for('home'))
+
+
 
 @app.before_request
 def before_request():
@@ -97,12 +126,13 @@ def new_posts():
 #dont thinklimiter works
 @limiter.limit("3 per minute", key_func=get_remote_address)
 def login_screen():
+    # Initialize 'lockout' there is none in session
     if 'locked_out' not in session:
         session['locked_out'] = False
-        print("lockout value 1: ", session['locked_out'])
         session['lockout_start_time'] = None
-
-
+    # Initialize 'wrong_input' there is none in session
+    if 'wrong_input' not in session:
+        session['wrong_input'] = 0
 
     if request.method == 'POST' and not session['locked_out']:
         lock_timer_res = lock_timer()
@@ -171,6 +201,9 @@ def server_time():
     return f"Server Time: {current_time}"
 
 
+
+
+
 @app.errorhandler(429)
 def ratelimit_error(e):
     remaining_time = int(e.description.split()[3])  # Extract remaining time from the error message
@@ -184,10 +217,14 @@ def ratelimit_error(e):
     return jsonify(error="ratelimit exceeded", message=error_message), 429
 
 
+
+
+
+
 if __name__ == '__main__':
 
     # app.config['SESSION_COOKIE_HTTPONLY'] = False #will allow us to get session cookies if we want
     # to create a script for it
 
     #Expose the ports and host, done so dockerfile will work
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug = True)
