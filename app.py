@@ -30,8 +30,8 @@ limiter = Limiter(app)
 
 oauth = OAuth(app)
 # Constants
-CLIENT_ID = "1019601629253-miad0a01ep99ut13e8ehpkijt87dfnf3.apps.googleusercontent.com"
-CLIENT_SECRET = "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"
+CLIENT_ID = "Update with info from overleaf"
+CLIENT_SECRET = "update with info from overleaf"
 REDIRECT_URI = "http://127.0.0.1:5000/auth"
 
 
