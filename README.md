@@ -111,3 +111,6 @@ For each task, detail:
 * All blog post related are moved to posts.py 
 * HTML related coode still found in "templates#/.." 
 * simple routing still found in app.py
+
+##Client secret and id 
+* client secret and ID can be found in overleaf and needs to be copied in to app.py for the code to run
