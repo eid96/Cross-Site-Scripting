@@ -112,5 +112,7 @@ For each task, detail:
 * HTML related coode still found in "templates#/.." 
 * simple routing still found in app.py
 
-##Client secret and id 
-* client secret and ID can be found in overleaf and needs to be copied in to app.py for the code to run
+### Client secret and id 
+* client secret and ID can be found in project report in section 4.5 and needs to be copied in to app.py for the code to run
+* CLIENT_ID = "insert ID from pdf"
+* CLIENT_SECRET = "insert secret from pdf"
